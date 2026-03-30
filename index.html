@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>家事 — Mein Haushalt</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #f7f4ef;
+      --bg-deep:   #f0ece4;
+      --ink:       #1a1814;
+      --ink-light: #3d3830;
+      --ink-faint: #8c8478;
+      --ink-ghost: #c8c2b8;
+      --red:       #c0392b;
+      --red-light: #f9eeec;
+      --amber:     #b5651d;
+      --amber-light:#fdf3e7;
+      --moss:      #4a6741;
+      --moss-light:#edf3ec;
+      --rule:      #ddd8ce;
+      --rule-light:#eae6df;
+    }
+
+    html, body { height: 100%; }
+
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'Noto Serif JP', Georgia, 'Hiragino Mincho ProN', serif;
+      min-height: 100vh;
+      padding-bottom: 60px;
+    }
+
+    ::selection { background: var(--red-light); }
+
+    /* ── Header ── */
+    header {
+      background: var(--ink);
+      padding: 0 24px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-inner {
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    .title-bar {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      padding: 22px 0 16px;
+    }
+
+    .title-left {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+    }
+
+    .kanji-label {
+      font-size: 11px;
+      color: var(--ink-ghost);
+      letter-spacing: 0.25em;
+      font-family: 'Courier New', monospace;
+    }
+
+    h1 {
+      color: #f7f4ef;
+      font-size: 18px;
+      font-weight: 400;
+      letter-spacing: 0.08em;
+    }
+
+    .status-pills {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+    .dot-red    { background: var(--red); }
+    .dot-amber  { background: var(--amber); }
+    .dot-moss   { background: var(--moss); }
+    .dot-empty  { border: 1px solid var(--ink-ghost); background: transparent; }
+    .dot-lg { width: 7px; height: 7px; }
+
+    /* ── Nav ── */
+    .nav {
+      display: flex;
+      border-top: 1px solid #2e2c28;
+    }
+
+    .nav-btn {
+      padding: 12px 24px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-family: 'Noto Serif JP', Georgia, serif;
+      font-size: 13px;
+      letter-spacing: 0.05em;
+      color: var(--ink-faint);
+      border-bottom: 2px solid transparent;
+      transition: color 0.2s;
+      position: relative;
+    }
+
+    .nav-btn.active {
+      color: #f7f4ef;
+      border-bottom-color: var(--red);
+    }
+
+    .nav-btn .jp {
+      font-size: 9px;
+      margin-right: 6px;
+      font-family: 'Courier New', monospace;
+      letter-spacing: 0.1em;
+      color: #3d3830;
+    }
+
+    .nav-btn.active .jp { color: var(--red); }
+
+    .nav-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--red);
+      color: #fff;
+      border-radius: 50%;
+      width: 16px;
+      height: 16px;
+      font-size: 9px;
+      font-family: 'Courier New', monospace;
+      font-weight: 700;
+      margin-left: 6px;
+    }
+
+    /* ── Main content ── */
+    main {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 32px 24px;
+    }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── Controls row ── */
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .sort-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .mono-label {
+      font-size: 10px;
+      color: var(--ink-faint);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      font-family: 'Courier New', monospace;
+    }
+
+    .pill-btn {
+      padding: 3px 10px;
+      border: 1px solid var(--rule);
+      background: transparent;
+      color: var(--ink-faint);
+      font-size: 11px;
+      cursor: pointer;
+      font-family: 'Courier New', monospace;
+      letter-spacing: 0.05em;
+      transition: all 0.15s;
+    }
+
+    .pill-btn:hover, .pill-btn.active {
+      border-color: var(--ink);
+      background: var(--ink);
+      color: var(--bg);
+    }
+
+    .show-done-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--ink-faint);
+      font-family: 'Courier New', monospace;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+    }
+
+    input[type="checkbox"] { accent-color: var(--ink); }
+
+    /* ── Brush line ── */
+    .brush-line {
+      width: 100%;
+      height: 8px;
+      display: block;
+    }
+
+    /* ── Task list ── */
+    .task-list { margin-top: 0; }
+
+    .task-divider {
+      height: 1px;
+      background: var(--rule-light);
+      margin-left: 18px;
+    }
+
+    .task-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 12px 14px 16px;
+      border-left: 2px solid var(--rule-light);
+      transition: background 0.15s;
+      cursor: default;
+    }
+
+    .task-row:hover { background: var(--bg-deep); }
+    .task-row.done  { opacity: 0.5; border-left-color: var(--moss); }
+    .task-row.urgent { border-left-color: var(--red); }
+    .task-row.warn   { border-left-color: var(--amber); }
+
+    .check-btn {
+      width: 20px;
+      height: 20px;
+      border: 1px solid var(--ink-ghost);
+      background: transparent;
+      cursor: pointer;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 11px;
+      transition: all 0.2s;
+    }
+
+    .check-btn.checked {
+      background: var(--moss);
+      border-color: var(--moss);
+    }
+
+    .task-content { flex: 1; min-width: 0; }
+
+    .task-title-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .task-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink);
+      letter-spacing: 0.02em;
+    }
+
+    .task-title.done-text {
+      text-decoration: line-through;
+      color: var(--ink-faint);
+      font-weight: 400;
+    }
+
+    .urgency-tag {
+      font-size: 9px;
+      padding: 1px 6px;
+      font-family: 'Courier New', monospace;
+      letter-spacing: 0.1em;
+    }
+
+    .tag-urgent { border: 1px solid var(--red);   color: var(--red); }
+    .tag-warn   { border: 1px solid var(--amber); color: var(--amber); }
+
+    .task-meta {
+      display: flex;
+      gap: 16px;
+      margin-top: 4px;
+      font-size: 11px;
+      color: var(--ink-faint);
+      font-family: 'Courier New', monospace;
+    }
+
+    .task-meta .last-done { color: var(--moss); }
+
+    .delete-btn {
+      border: none;
+      background: none;
+      cursor: pointer;
+      color: var(--ink-ghost);
+      font-size: 16px;
+      padding: 0 4px;
+      opacity: 0.4;
+      transition: opacity 0.2s;
+      flex-shrink: 0;
+    }
+
+    .delete-btn:hover { opacity: 1; }
+
+    /* ── Empty state ── */
+    .empty-state {
+      text-align: center;
+      padding: 60px 0;
+      color: var(--ink-ghost);
+    }
+
+    .empty-kanji { font-size: 28px; margin-bottom: 8px; }
+
+    .empty-label {
+      font-size: 11px;
+      font-family: 'Courier New', monospace;
+      letter-spacing: 0.15em;
+    }
+
+    /* ── Add form ── */
+    .add-form {
+      margin-top: 24px;
+      padding: 20px 20px 24px;
+      background: var(--bg-deep);
+      border-left: 2px solid var(--ink);
+    }
+
+    .form-heading {
+      font-size: 10px;
+      color: var(--ink-faint);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      font-family: 'Courier New', monospace;
+      margin-bottom: 16px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 9px 12px;
+      border: none;
+      border-bottom: 1px solid var(--rule);
+      background: transparent;
+      font-size: 15px;
+      font-family: 'Noto Serif JP', Georgia, serif;
+      color: var(--ink);
+      outline: none;
+      margin-bottom: 16px;
+    }
+
+    .form-input::placeholder { color: var(--ink-ghost); font-style: italic; }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+    }
+
+    .form-field label {
+      display: block;
+      font-size: 9px;
+      color: var(--ink-faint);
+      letter-spacing: 0.15em;
+      font-family: 'Courier New', monospace;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .form-select {
+      width: 100%;
+      padding: 9px 12px;
+      border: none;
+      border-bottom: 1px solid var(--rule);
+      background: transparent;
+      font-size: 13px;
+      font-family: 'Courier New', monospace;
+      color: var(--ink);
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .btn-primary {
+      padding: 9px 24px;
+      background: var(--ink);
+      color: var(--bg);
+      border: none;
+      font-size: 12px;
+      cursor: pointer;
+      font-family: 'Courier New', monospace;
+      letter-spacing: 0.1em;
+      transition: opacity 0.2s;
+    }
+
+    .btn-primary:hover { opacity: 0.8; }
+
+    .btn-secondary {
+      padding: 9px 24px;
+      background: transparent;
+      color: var(--ink-faint);
+      border: 1px solid var(--rule);
+      font-size: 12px;
+      cursor: pointer;
+      font-family: 'Courier New', monospace;
+      letter-spacing: 0.1em;
+      transition: all 0.15s;
+    }
+
+    .btn-secondary:hover { border-color: var(--ink); color: var(--ink); }
+
+    .btn-add {
+      margin-top: 20px;
+      width: 100%;
+      padding: 12px;
+      background: transparent;
+      border: 1px solid var(--rule);
+      color: var(--ink-faint);
+      font-size: 12px;
+      cursor: pointer;
+      font-family: 'Courier New', monospace;
+      letter-spacing: 0.15em;
+      transition: all 0.2s;
+    }
+
+    .btn-add:hover { border-color: var(--ink); color: var(--ink); }
+
+    /* ── Plan tab ── */
+    .legend {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--ink-faint);
+      font-family: 'Courier New', monospace;
+    }
+
+    .filter-row {
+      display: flex;
+      gap: 6px;
+      padding: 16px 0 20px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .group-heading {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--rule);
+    }
+
+    .group-kanji {
+      font-size: 18px;
+      color: var(--ink-faint);
+      line-height: 1;
+    }
+
+    .group-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink);
+      letter-spacing: 0.05em;
+    }
+
+    .group-count {
+      font-size: 10px;
+      color: var(--ink-faint);
+      font-family: 'Courier New', monospace;
+    }
+
+    .plan-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin-bottom: 36px;
+    }
+
+    .plan-table th {
+      padding: 8px 12px 8px 0;
+      text-align: left;
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--ink-faint);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      font-family: 'Courier New', monospace;
+      white-space: nowrap;
+      border-bottom: 1px solid var(--rule);
+    }
+
+    .plan-table th:first-child { padding-left: 0; width: 20px; }
+
+    .plan-table td {
+      padding: 12px 12px 12px 0;
+      border-bottom: 1px solid var(--rule-light);
+      vertical-align: middle;
+    }
+
+    .plan-table td:first-child { padding-left: 0; }
+
+    .plan-title { font-weight: 500; }
+    .plan-title.done-text { text-decoration: line-through; color: var(--ink-ghost); font-weight: 400; }
+
+    .plan-history {
+      margin-top: 4px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .plan-history span {
+      font-size: 9px;
+      color: var(--ink-ghost);
+      font-family: 'Courier New', monospace;
+    }
+
+    .plan-category {
+      font-size: 11px;
+      color: var(--ink-faint);
+      font-family: 'Courier New', monospace;
+      white-space: nowrap;
+    }
+
+    .plan-status {
+      font-size: 10px;
+      font-family: 'Courier New', monospace;
+      letter-spacing: 0.08em;
+      white-space: nowrap;
+    }
+
+    .plan-last {
+      font-size: 11px;
+      font-family: 'Courier New', monospace;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 480px) {
+      main { padding: 20px 16px; }
+      header { padding: 0 16px; }
+      .form-grid { grid-template-columns: 1fr 1fr; }
+      .plan-table { font-size: 11px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="title-bar">
+      <div class="title-left">
+        <span class="kanji-label">家事</span>
+        <h1>Mein Haushalt</h1>
+      </div>
+      <div class="status-pills" id="statusPills"></div>
+    </div>
+    <nav class="nav">
+      <button class="nav-btn active" data-tab="tasks" onclick="switchTab('tasks')">
+        <span class="jp">作業</span>Aufgaben
+        <span class="nav-badge" id="taskBadge" style="display:none"></span>
+      </button>
+      <button class="nav-btn" data-tab="plan" onclick="switchTab('plan')">
+        <span class="jp">計画</span>Putzplan
+      </button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- ── AUFGABEN ── -->
+  <div class="tab-panel active" id="tab-tasks">
+    <div class="controls">
+      <div class="sort-group">
+        <span class="mono-label">Sortierung</span>
+        <button class="pill-btn active" id="sort-default"  onclick="setSort('default')">Standard</button>
+        <button class="pill-btn"        id="sort-category" onclick="setSort('category')">Kategorie</button>
+        <button class="pill-btn"        id="sort-deadline" onclick="setSort('deadline')">Fälligkeit</button>
+      </div>
+      <label class="show-done-label">
+        <input type="checkbox" id="showDoneCheck" onchange="render()" />
+        Erledigte
+      </label>
+    </div>
+
+    <svg class="brush-line" viewBox="0 0 400 8" preserveAspectRatio="none">
+      <path d="M0,4 Q50,1 100,4 Q150,7 200,4 Q250,1 300,4 Q350,7 400,4"
+        stroke="#ddd8ce" stroke-width="0.8" fill="none" stroke-linecap="round" opacity="0.6"/>
+    </svg>
+
+    <div class="task-list" id="taskList"></div>
+
+    <svg class="brush-line" viewBox="0 0 400 8" preserveAspectRatio="none" style="margin-top:4px">
+      <path d="M0,4 Q50,1 100,4 Q150,7 200,4 Q250,1 300,4 Q350,7 400,4"
+        stroke="#eae6df" stroke-width="0.8" fill="none" stroke-linecap="round" opacity="0.6"/>
+    </svg>
+
+    <div id="addFormContainer">
+      <button class="btn-add" onclick="openForm()">+ NEUE AUFGABE</button>
+    </div>
+  </div>
+
+  <!-- ── PUTZPLAN ── -->
+  <div class="tab-panel" id="tab-plan">
+    <div class="legend">
+      <span class="legend-item"><span class="dot dot-red"></span>Überfällig</span>
+      <span class="legend-item"><span class="dot dot-amber"></span>Bald fällig</span>
+      <span class="legend-item"><span class="dot dot-moss"></span>Erledigt</span>
+    </div>
+
+    <svg class="brush-line" viewBox="0 0 400 8" preserveAspectRatio="none">
+      <path d="M0,4 Q50,1 100,4 Q150,7 200,4 Q250,1 300,4 Q350,7 400,4"
+        stroke="#ddd8ce" stroke-width="0.8" fill="none" stroke-linecap="round" opacity="0.6"/>
+    </svg>
+
+    <div class="filter-row" id="filterRow"></div>
+    <div id="planContent"></div>
+  </div>
+</main>
+
+<script>
+// ── Data ──────────────────────────────────────────────────────────────────────
+const CATEGORIES = ["Küche","Bad","Wohnzimmer","Schlafzimmer","Außen","Sonstiges"];
+const REPEATS    = ["Täglich","Wöchentlich","Monatlich","Einmalig"];
+const repeatHours = { Täglich:24, Wöchentlich:168, Monatlich:720, Einmalig:Infinity };
+const warnHours   = { Täglich:0,  Wöchentlich:48,  Monatlich:96,  Einmalig:Infinity };
+
+const _now = Date.now();
+let tasks = [
+  { id:1, title:"Küche putzen",     category:"Küche",      repeat:"Wöchentlich", priority:"hoch",    done:false, completions:[new Date(_now-3600000*150).toISOString()] },
+  { id:2, title:"Bad reinigen",     category:"Bad",        repeat:"Wöchentlich", priority:"hoch",    done:false, completions:[] },
+  { id:3, title:"Staubsaugen",      category:"Wohnzimmer", repeat:"Täglich",     priority:"mittel",  done:true,  completions:[new Date(_now-3600000*2).toISOString()] },
+  { id:4, title:"Fenster putzen",   category:"Wohnzimmer", repeat:"Monatlich",   priority:"niedrig", done:false, completions:[new Date(_now-3600000*648).toISOString()] },
+  { id:5, title:"Müll rausbringen", category:"Sonstiges",  repeat:"Wöchentlich", priority:"mittel",  done:false, completions:[new Date(_now-3600000*20).toISOString()] },
+];
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let currentTab   = "tasks";
+let sortBy       = "default";
+let sortDir      = 1;
+let tableFilter  = "Alle";
+
+// ── Logic ─────────────────────────────────────────────────────────────────────
+function urgency(task) {
+  if (task.done) return "ok";
+  const last = task.completions.length ? new Date(task.completions[task.completions.length-1]) : null;
+  if (!last) return task.repeat === "Einmalig" ? "none" : "urgent";
+  const hoursAgo = (Date.now() - last.getTime()) / 3600000;
+  if (hoursAgo >= repeatHours[task.repeat]) return "urgent";
+  if (hoursAgo >= repeatHours[task.repeat] - warnHours[task.repeat]) return "warn";
+  return "none";
+}
+
+function hoursUntilDue(task) {
+  if (task.done) return Infinity;
+  const last = task.completions.length ? new Date(task.completions[task.completions.length-1]) : null;
+  if (repeatHours[task.repeat] === Infinity) return Infinity;
+  if (!last) return -Infinity;
+  return repeatHours[task.repeat] - (Date.now()-last.getTime())/3600000;
+}
+
+function fmt(iso) {
+  if (!iso) return "—";
+  return new Date(iso).toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"});
+}
+
+function timeAgo(iso, repeat) {
+  if (!iso) return { text: "noch nie", color: "var(--ink-ghost)" };
+  const h = (Date.now() - new Date(iso).getTime()) / 3600000;
+  let text;
+  if (h < 1)          text = "vor wenigen Min.";
+  else if (h < 24)    text = `vor ${Math.floor(h)} Std.`;
+  else if (h < 48)    text = "vor 1 Tag";
+  else if (h < 24*7)  text = `vor ${Math.floor(h/24)} Tagen`;
+  else if (h < 24*14) text = "vor 1 Woche";
+  else if (h < 24*30) text = `vor ${Math.floor(h/(24*7))} Wochen`;
+  else if (h < 24*60) text = "vor 1 Monat";
+  else                text = `vor ${Math.floor(h/(24*30))} Monaten`;
+  const total = repeatHours[repeat];
+  let color;
+  if (total === Infinity)                  color = "var(--moss)";
+  else if (h >= total)                     color = "var(--red)";
+  else if (h >= total - warnHours[repeat]) color = "var(--amber)";
+  else                                     color = "var(--moss)";
+  return { text, color };
+}
+
+function sortedTasks(list) {
+  if (sortBy === "default") return list;
+  return [...list].sort((a,b) => {
+    if (sortBy === "category") return sortDir * a.category.localeCompare(b.category,"de");
+    if (sortBy === "deadline") {
+      const sa = isFinite(hoursUntilDue(a)) ? hoursUntilDue(a) : 1e9;
+      const sb = isFinite(hoursUntilDue(b)) ? hoursUntilDue(b) : 1e9;
+      return sortDir * (sa - sb);
+    }
+    return 0;
+  });
+}
+
+function dotHtml(u) {
+  if (u==="ok")     return `<span class="dot dot-lg dot-moss"></span>`;
+  if (u==="urgent") return `<span class="dot dot-lg dot-red"></span>`;
+  if (u==="warn")   return `<span class="dot dot-lg dot-amber"></span>`;
+  return `<span class="dot dot-lg dot-empty"></span>`;
+}
+
+// ── Tab switching ─────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+  document.getElementById("tab-"+tab).classList.add("active");
+  document.querySelectorAll(".nav-btn").forEach(b => {
+    b.classList.toggle("active", b.dataset.tab === tab);
+  });
+  render();
+}
+
+// ── Sort ──────────────────────────────────────────────────────────────────────
+function setSort(key) {
+  if (sortBy === key) sortDir *= -1;
+  else { sortBy = key; sortDir = 1; }
+  render();
+}
+
+// ── Task actions ──────────────────────────────────────────────────────────────
+function toggleTask(id) {
+  tasks = tasks.map(t => {
+    if (t.id !== id) return t;
+    const nowDone = !t.done;
+    return { ...t, done: nowDone, completions: nowDone ? [...t.completions, new Date().toISOString()] : t.completions };
+  });
+  render();
+}
+
+function deleteTask(id) {
+  tasks = tasks.filter(t => t.id !== id);
+  render();
+}
+
+function addTask() {
+  const title = document.getElementById("newTitle").value.trim();
+  if (!title) return;
+  tasks.push({
+    id: Date.now(),
+    title,
+    category: document.getElementById("newCat").value,
+    repeat:   document.getElementById("newRepeat").value,
+    priority: document.getElementById("newPrio").value,
+    done: false,
+    completions: []
+  });
+  closeForm();
+  render();
+}
+
+// ── Form ──────────────────────────────────────────────────────────────────────
+function openForm() {
+  const container = document.getElementById("addFormContainer");
+  container.innerHTML = `
+    <div class="add-form">
+      <div class="form-heading">新しい作業 — Neue Aufgabe</div>
+      <input class="form-input" id="newTitle" placeholder="Aufgabe eingeben…"
+        onkeydown="if(event.key==='Enter') addTask()" autofocus />
+      <div class="form-grid">
+        <div class="form-field">
+          <label>Bereich</label>
+          <select class="form-select" id="newCat">
+            ${CATEGORIES.map(c=>`<option>${c}</option>`).join("")}
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Intervall</label>
+          <select class="form-select" id="newRepeat">
+            ${REPEATS.map(r=>`<option>${r}</option>`).join("")}
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Priorität</label>
+          <select class="form-select" id="newPrio">
+            <option value="hoch">Hoch</option>
+            <option value="mittel" selected>Mittel</option>
+            <option value="niedrig">Niedrig</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn-primary" onclick="addTask()">HINZUFÜGEN</button>
+        <button class="btn-secondary" onclick="closeForm()">ABBRECHEN</button>
+      </div>
+    </div>`;
+  document.getElementById("newTitle").focus();
+}
+
+function closeForm() {
+  document.getElementById("addFormContainer").innerHTML =
+    `<button class="btn-add" onclick="openForm()">+ NEUE AUFGABE</button>`;
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function render() {
+  const openCount   = tasks.filter(t=>!t.done).length;
+  const urgentCount = tasks.filter(t=>!t.done && urgency(t)==="urgent").length;
+  const warnCount   = tasks.filter(t=>!t.done && urgency(t)==="warn").length;
+
+  // Badge
+  const badge = document.getElementById("taskBadge");
+  if (openCount > 0) { badge.style.display="inline-flex"; badge.textContent=openCount; }
+  else { badge.style.display="none"; }
+
+  // Status pills
+  const pills = document.getElementById("statusPills");
+  pills.innerHTML = "";
+  if (urgentCount > 0) {
+    pills.innerHTML += `<span class="status-pill" style="color:#f9eeec"><span class="dot dot-red"></span>${urgentCount}</span>`;
+  }
+  if (warnCount > 0) {
+    pills.innerHTML += `<span class="status-pill" style="color:#fdf3e7"><span class="dot dot-amber"></span>${warnCount}</span>`;
+  }
+  pills.innerHTML += `<span class="status-pill" style="color:#8c8478">${tasks.filter(t=>t.done).length}/${tasks.length}</span>`;
+
+  // Sort buttons
+  ["default","category","deadline"].forEach(k => {
+    const btn = document.getElementById("sort-"+k);
+    if (!btn) return;
+    btn.classList.toggle("active", sortBy===k);
+    const labels = { default:"Standard", category:"Kategorie", deadline:"Fälligkeit" };
+    const arrow = sortBy===k ? (sortDir===1?" ↑":" ↓") : "";
+    btn.textContent = labels[k]+arrow;
+  });
+
+  if (currentTab === "tasks") renderTasks();
+  if (currentTab === "plan")  renderPlan();
+}
+
+function renderTasks() {
+  const showDone = document.getElementById("showDoneCheck").checked;
+  const list     = sortedTasks(tasks.filter(t => showDone || !t.done));
+  const el       = document.getElementById("taskList");
+
+  if (list.length === 0) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-kanji">無</div><div class="empty-label">Nichts zu tun</div></div>`;
+    return;
+  }
+
+  el.innerHTML = list.map((task,i) => {
+    const u = urgency(task);
+    const rowClass = task.done ? "done" : u==="urgent" ? "urgent" : u==="warn" ? "warn" : "";
+    const lastDone = task.completions.length ? task.completions[task.completions.length-1] : null;
+
+    return `
+      ${i>0 ? '<div class="task-divider"></div>' : ""}
+      <div class="task-row ${rowClass}">
+        <button class="check-btn ${task.done?"checked":""}" onclick="toggleTask(${task.id})">
+          ${task.done?"✓":""}
+        </button>
+        <div class="task-content">
+          <div class="task-title-row">
+            ${dotHtml(u)}
+            <span class="task-title ${task.done?"done-text":""}">${task.title}</span>
+            ${!task.done && u==="urgent" ? '<span class="urgency-tag tag-urgent">DRINGEND</span>' : ""}
+            ${!task.done && u==="warn"   ? '<span class="urgency-tag tag-warn">BALD</span>' : ""}
+          </div>
+          <div class="task-meta">
+            <span>${task.category}</span>
+            <span>${task.repeat}</span>
+            ${lastDone ? (() => { const ta = timeAgo(lastDone, task.repeat); return `<span style="color:${ta.color};font-family:'Courier New',monospace">✓ ${ta.text}</span>`; })() : ""}
+          </div>
+        </div>
+        <button class="delete-btn" onclick="deleteTask(${task.id})">×</button>
+      </div>`;
+  }).join("");
+}
+
+function renderPlan() {
+  // Filter buttons
+  const filterRow = document.getElementById("filterRow");
+  filterRow.innerHTML = `<span class="mono-label" style="margin-right:4px">FILTER</span>` +
+    ["Alle",...REPEATS].map(r =>
+      `<button class="pill-btn ${tableFilter===r?"active":""}" onclick="setPlanFilter('${r}')">${r}</button>`
+    ).join("");
+
+  const groups = REPEATS
+    .map(r => ({ label:r, tasks:tasks.filter(t=>t.repeat===r) }))
+    .filter(g => g.tasks.length > 0)
+    .filter(g => tableFilter==="Alle" || g.label===tableFilter);
+
+  const kanjis = { Täglich:"日", Wöchentlich:"週", Monatlich:"月", Einmalig:"一" };
+  const el = document.getElementById("planContent");
+
+  if (groups.length === 0) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-kanji">空</div><div class="empty-label">Keine Einträge</div></div>`;
+    return;
+  }
+
+  el.innerHTML = groups.map(group => `
+    <div class="group-heading">
+      <span class="group-kanji">${kanjis[group.label]}</span>
+      <span class="group-label">${group.label}</span>
+      <span class="group-count">${group.tasks.length} Aufgabe${group.tasks.length!==1?"n":""}</span>
+    </div>
+    <div style="overflow-x:auto;margin-bottom:36px">
+      <table class="plan-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Aufgabe</th>
+            <th>Bereich</th>
+            <th>Status</th>
+            <th>Zuletzt erledigt</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${group.tasks.map(task => {
+            const u = urgency(task);
+            const last = task.completions.length ? task.completions[task.completions.length-1] : null;
+            const titleColor = task.done ? "var(--ink-ghost)" : u==="urgent" ? "var(--red)" : u==="warn" ? "var(--amber)" : "var(--ink)";
+            const statusColor = task.done ? "var(--moss)" : u==="urgent" ? "var(--red)" : u==="warn" ? "var(--amber)" : "var(--ink-faint)";
+            const statusText  = task.done ? "✓ erledigt" : u==="urgent" ? "● dringend" : u==="warn" ? "◐ bald" : "○ offen";
+            const historyItems = task.completions.length > 1
+              ? [...task.completions].reverse().slice(1,4).map((d,j)=>`<span>${j>0?"· ":"↩ "}${fmt(d)}</span>`).join("")
+              : "";
+            return `
+              <tr>
+                <td>${dotHtml(u)}</td>
+                <td>
+                  <span class="plan-title ${task.done?"done-text":""}" style="color:${titleColor}">${task.title}</span>
+                  ${historyItems ? `<div class="plan-history">${historyItems}</div>` : ""}
+                </td>
+                <td class="plan-category">${task.category}</td>
+                <td><span class="plan-status" style="color:${statusColor}">${statusText}</span></td>
+                <td class="plan-last">${(() => { if (!last) return '<span style="color:var(--ink-ghost);font-style:italic">noch nie</span>'; const ta = timeAgo(last, task.repeat); return `<span style="color:${ta.color}">${ta.text}</span>`; })()}</td>
+              </tr>`;
+          }).join("")}
+        </tbody>
+      </table>
+    </div>
+  `).join("");
+}
+
+function setPlanFilter(f) {
+  tableFilter = f;
+  render();
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+render();
+</script>
+</body>
+</html>
